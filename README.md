@@ -17,7 +17,16 @@ client_secret('YOUR_CLIENT_SECRET').
 ```
 
 Once you have created this file, the library will handle all of the authorization stuff for you.
-You can simply load `spotify.pl` and run:
+You can now simply load `spotify.pl` and run the following examples.
+
+To export to a CSV, use the following.
+```prolog
+?- playlist_to_csv('kytuzian', _-'Spacey Music', 'test.csv').
+true.
+```
+
+You can replace 'kytuzian' and 'Spacey Music' with your user id and playlist name.
+Alternatively, instead of the `_`, you can specify the playlist id.
 
 ```prolog
 ?- findall(Track, playlist_track_info('kytuzian', _-'Spacey Music', Track), Tracks).
