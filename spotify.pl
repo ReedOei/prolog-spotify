@@ -161,3 +161,13 @@ playlist_track_info(User, Id-Name, Info) :-
     playlist_track(Id, Track),
     track_info(Track, Info).
 
+track_to_csv(Name-Artists, row(Name, ArtistsStr)) :-
+    atomic_list_concat(Artists, ',', ArtistsStr).
+
+% TODO: Would be very cool if we could make this bidirectional
+% (e.g., read from a csv and create a playlist, or write a playlist from Spotify)
+playlist_to_csv(User, Id-Name, Path) :-
+    findall(Track, playlist_track_info(User, Id-Name, Track), Tracks),
+    maplist(track_to_csv, Tracks, Rows),
+    csv_write_file(Path, Rows).
+
