@@ -1,11 +1,16 @@
+:- module(spotify, [access_token/2, playlist_to_csv/3, run_curl/2, run_curl/4,
+                    retrieve_all/2, retrieve_all/4, playlist/2, playlist_track/2,
+                    track_name/2, track_artists/2, track_info/2, playlist_info/2,
+                    playlist_track_info/3, test/1]).
+
 :- use_module(library(clpfd)).
 :- use_module(library(filesex)).
 :- use_module(library(achelois)).
 :- use_module(library(http/json)).
 :- use_module(library(url)).
 
-% This module should export client_id/1 and client_secret/1
-:- use_module(secrets).
+:- dynamic client_id/1.
+:- dynamic client_secret/1.
 
 timestamp(Timestamp) :-
     get_time(Temp),
@@ -174,4 +179,6 @@ playlist_to_csv(User, Id-Name, Path) :-
     ), Tracks),
     maplist(track_to_csv, Tracks, Rows),
     csv_write_file(Path, Rows).
+
+test(X) :- client_id(X).
 
