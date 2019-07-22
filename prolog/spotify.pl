@@ -9,9 +9,6 @@
 :- use_module(library(http/json)).
 :- use_module(library(url)).
 
-:- dynamic client_id/1.
-:- dynamic client_secret/1.
-
 timestamp(Timestamp) :-
     get_time(Temp),
     Timestamp is round(Temp).
