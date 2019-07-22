@@ -7,7 +7,9 @@ Currently basically just a nice wrapper around `curl`.
 
 # Usage
 
-You need to create a `secrets.pl` file that looks like this in the same directory as `spotify.pl`:
+## Interactive
+
+You need to create a `secrets.pl` file that looks like this in the same directory as `main.pl`:
 
 ```prolog
 :- module(secrets, [client_id/1, client_secret/1]).
@@ -48,4 +50,10 @@ Item = json([collaborative= @(false), external_urls=json([spotify='https://open.
 ```
 
 The JSON will be returned in the format specified by the [JSON library](https://www.swi-prolog.org/pldoc/man?section=jsonsupport).
+
+## Library
+
+If you wish to use this as a library, you will still need a secrets file containing `client_id/1` and `client_secret`.
+Naturally, this can be set up however you wish.
+The rest of the usage is the same.
 
