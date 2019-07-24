@@ -19,7 +19,7 @@ client_secret('YOUR_CLIENT_SECRET').
 ```
 
 Once you have created this file, the library will handle all of the authorization stuff for you.
-You can now simply load `spotify.pl` and run the following examples.
+You can now simply load `spotify.pl` (e.g., via `prolog main.pl`) and run the following examples.
 
 To export to a CSV, use the following.
 ```prolog
@@ -53,7 +53,7 @@ The JSON will be returned in the format specified by the [JSON library](https://
 
 ## Library
 
-If you wish to use this as a library, you will still need a secrets file containing `client_id/1` and `client_secret`.
+If you wish to use this as a library, you will still need a secrets file containing `client_id/1` and `client_secret/1`.
 Naturally, this can be set up however you wish.
 The rest of the usage is the same.
 
