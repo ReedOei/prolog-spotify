@@ -1,7 +1,8 @@
 :- module(spotify, [access_token/2, playlist_to_csv/3, run_curl/2, run_curl/4,
                     retrieve_all/2, retrieve_all/4, playlist/2, playlist_track/2,
                     track_name/2, track_artists/2, track_info/2, playlist_info/2,
-                    playlist_track_info/3, test/1]).
+                    playlist_track_info/3, search/2, search/3, search/4, search/5,
+                    search_info/3, search_info/5]).
 
 :- use_module(library(clpfd)).
 :- use_module(library(filesex)).
@@ -88,7 +89,9 @@ add_default(Option, Options, NewOptions) :-
         NewOptions = [Option|Options]
     ).
 
-add_defaults(Token, Options, NewToken, NewOptions) :-
+add_defaults(AllDefaults, Options, NewOptions) :-
+    foldl(add_default, AllDefaults, Options, NewOptions).
+add_curl_defaults(Token, Options, NewToken, NewOptions) :-
     Defaults = [silent],
 
     (
@@ -100,10 +103,10 @@ add_defaults(Token, Options, NewToken, NewOptions) :-
         Token = NewToken, AllDefaults = Defaults
     ),
 
-    foldl(add_default, AllDefaults, Options, NewOptions).
+    add_defaults(AllDefaults, Options, NewOptions).
 
 curl_options(Token, Options, NewToken, CurlOptions) :-
-    add_defaults(Token, Options, NewToken, AllOptions),
+    add_curl_defaults(Token, Options, NewToken, AllOptions),
     maplist(build_curl_option, AllOptions, Temp),
     flatten(Temp, CurlOptions).
 
@@ -138,15 +141,14 @@ playlist(User, Playlist) :-
 
 playlist_track(PlaylistId, Track) :-
     atomic_list_concat(['playlists', PlaylistId, 'tracks'], '/', Endpoint),
-    retrieve_all(_, [endpoint(Endpoint)], _, Track).
+    retrieve_all(_, [endpoint(Endpoint)], _, json(T)),
+    member(track=Track, T).
 
 track_name(json(Track), Name) :-
-    member(track=json(T), Track),
-    member(name=Name, T).
+    member(name=Name, Track).
 
 track_artists(json(Track), ArtistNames) :-
-    member(track=json(T), Track),
-    member(artists=Artists, T),
+    member(artists=Artists, Track),
     findall(Name, (member(json(Artist), Artists), member(name=Name, Artist)), ArtistNames).
 
 track_info(Track, Name-Artists) :-
@@ -177,5 +179,44 @@ playlist_to_csv(User, Id-Name, Path) :-
     maplist(track_to_csv, Tracks, Rows),
     csv_write_file(Path, Rows).
 
-test(X) :- client_id(X).
+build_param(F, Name=Value) :-
+    F =.. [Name, Value].
+
+search_info(Type, Options, Result) :- search_info(Type, _, Options, _, Result).
+search_info(track, Token, Options, NewToken, Result) :-
+    search(track, Token, Options, NewToken, Track),
+    track_info(Track, Result).
+
+search(Options, Result) :- search(_, Options, _, Result).
+search(Type, Options, Result) :- search(Type, _, Options, _, Result).
+search(Token, Options, NewToken, Result) :-
+    member(type(Type), Options) -> search(Type, Token, Options, NewToken, Result);
+
+    search(track, Token, Options, NewToken, Result);
+    search(album, Token, Options, NewToken, Result);
+    search(artist, Token, Options, NewToken, Result);
+    search(playlist, Token, Options, NewToken, Result).
+
+search(Type, Token, Options, NewToken, Result) :-
+    add_defaults([type(Type)], Options, AllOptions),
+    member(type(ActualType), AllOptions),
+    maplist(build_param, AllOptions, Params),
+
+    search_inner(ActualType, Token, [endpoint('search', Params)], NewToken, Result).
+
+search_inner(Type, Token, Options, NewToken, Result) :-
+    run_curl(Token, Options, TempToken, json(Response)),
+    atom_concat(Type, 's', TypeStr),
+    member(TypeStr=json(JSON), Response),
+
+    (
+        member(next='@'(null), JSON), member(items=AllItems, JSON) -> member(Result, AllItems);
+        member(next=Url, JSON), member(items=Items, JSON) ->
+            (
+                member(Result, Items);
+                with_option(url(Url), Options, NewOptions),
+                search_inner(Type, TempToken, NewOptions, NewToken, Result)
+            );
+        Result = Response
+    ).
 
