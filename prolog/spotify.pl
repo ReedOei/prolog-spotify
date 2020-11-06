@@ -1,4 +1,4 @@
-:- module(spotify, [access_token/2, playlist_to_csv/3, run_curl/2, run_curl/4,
+:- module(spotify, [access_token/2, run_curl/2, playlist_to_csv/3, run_curl/4,
                     retrieve_all/2, retrieve_all/4, playlist/2, playlist_track/2,
                     track_name/2, track_artists/2, track_info/2, playlist_info/2,
                     playlist_track_info/3, search/2, search/3, search/4, search/5,
@@ -170,14 +170,12 @@ track_to_csv(Name-Artists, row(Name, ArtistsStr)) :-
 
 % TODO: Would be very cool if we could make this bidirectional
 % (e.g., read from a csv and create a playlist, or write a playlist from Spotify)
-playlist_to_csv(User, Id-Name, Path) :-
-    findall(Track,
+playlist_to_csv(User, Id-Name, Stream) :-
+    forall(playlist_track_info(User, Id-Name, Track),
     (
-        playlist_track_info(User, Id-Name, Track),
-        format('Retrieved track ~w~n', [Track])
-    ), Tracks),
-    maplist(track_to_csv, Tracks, Rows),
-    csv_write_file(Path, Rows).
+        track_to_csv(Track, CsvRow),
+        csv_write_stream(Stream, [CsvRow], [])
+    )).
 
 build_param(F, Name=Value) :-
     F =.. [Name, Value].
